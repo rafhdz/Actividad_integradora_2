@@ -1,5 +1,7 @@
 #include <iostream>
 #include <vector>
+#include <fstream>
+#include <sstream>
 #include <algorithm>
 #include <queue>
 #include <cmath>
@@ -176,42 +178,52 @@ std::vector<std::vector<Point> > computeVoronoiCells(const std::vector<Point>& p
 }
 
 int main() {
-    int N;
-    std::cin >> N;
-
-    std::vector<std::vector<double> > distance(N, std::vector<double>(N));
-    for(int i = 0; i < N; ++i)
-        for(int j = 0; j < N; ++j)
-            std::cin >> distance[i][j];
-
-    std::vector<std::vector<int> > capacity(N, std::vector<int>(N));
-    for(int i = 0; i < N; ++i)
-        for(int j = 0; j < N; ++j)
-            std::cin >> capacity[i][j];
-
-    std::vector<Point> centrals(N);
-    for(int i = 0; i < N; ++i) {
-        std::cin >> centrals[i].x >> centrals[i].y;
+    std::ifstream inputFile("input.txt");
+    if (!inputFile.is_open()) {
+        std::cerr << "No se pudo abrir el archivo de entrada.\n";
+        return 1;
     }
+
+    int N;
+    inputFile >> N;
+
+    // Leer matriz de distancias
+    std::vector<std::vector<double> > distance(N, std::vector<double>(N));
+    for (int i = 0; i < N; ++i)
+        for (int j = 0; j < N; ++j)
+            inputFile >> distance[i][j];
+
+    // Leer matriz de capacidades
+    std::vector<std::vector<int> > capacity(N, std::vector<int>(N));
+    for (int i = 0; i < N; ++i)
+        for (int j = 0; j < N; ++j)
+            inputFile >> capacity[i][j];
+
+    // Leer puntos (centrales)
+    std::vector<Point> centrals(N);
+    for (int i = 0; i < N; ++i)
+        inputFile >> centrals[i].x >> centrals[i].y;
+
+    inputFile.close();
 
     // Parte 1: Árbol de Expansión Mínima
     std::vector<Edge> edges;
-    for(int i = 0; i < N; ++i)
-        for(int j = i + 1; j < N; ++j)
-            if(distance[i][j] > 0)
+    for (int i = 0; i < N; ++i)
+        for (int j = i + 1; j < N; ++j)
+            if (distance[i][j] > 0)
                 edges.emplace_back(i, j, distance[i][j]);
 
     std::sort(edges.begin(), edges.end());
     DSU dsu(N);
     std::vector<std::pair<int, int> > mstEdges;
-    for(const Edge& e : edges) {
-        if(dsu.unite(e.u, e.v)) {
+    for (const Edge& e : edges) {
+        if (dsu.unite(e.u, e.v)) {
             mstEdges.emplace_back(e.u, e.v);
         }
     }
 
     std::cout << "1. Forma de cablear las colonias con fibra:\n";
-    for(const std::pair<int, int>& e : mstEdges) {
+    for (const std::pair<int, int>& e : mstEdges) {
         std::cout << "(" << char('A' + e.first) << "," << char('A' + e.second) << ")\n";
     }
 
@@ -219,17 +231,17 @@ int main() {
     std::vector<int> route = nearestNeighborTSP(distance);
     twoOpt(route, distance);
     std::cout << "2. Ruta de correspondencia:\n";
-    for(size_t i = 0; i < route.size(); ++i) {
-        if(i > 0) std::cout << "-";
+    for (size_t i = 0; i < route.size(); ++i) {
+        if (i > 0) std::cout << "-";
         std::cout << char('A' + route[i]);
     }
     std::cout << "\n";
 
     // Parte 3: Flujo Máximo
     MaxFlow mf(N);
-    for(int u = 0; u < N; ++u)
-        for(int v = 0; v < N; ++v)
-            if(capacity[u][v] > 0)
+    for (int u = 0; u < N; ++u)
+        for (int v = 0; v < N; ++v)
+            if (capacity[u][v] > 0)
                 mf.addEdge(u, v, capacity[u][v]);
 
     std::cout << "3. Flujo máximo: " << mf.maxFlow(0, N - 1) << "\n";
@@ -237,9 +249,9 @@ int main() {
     // Parte 4: Voronoi (simplificado)
     auto voronoiCells = computeVoronoiCells(centrals);
     std::cout << "4. Polígonos de Voronoi:\n";
-    for(size_t i = 0; i < voronoiCells.size(); ++i) {
+    for (size_t i = 0; i < voronoiCells.size(); ++i) {
         std::cout << "Polígono " << i + 1 << ":\n";
-        for(const Point& p : voronoiCells[i]) {
+        for (const Point& p : voronoiCells[i]) {
             std::cout << "(" << p.x << "," << p.y << ") ";
         }
         std::cout << "\n";
