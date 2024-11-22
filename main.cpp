@@ -6,6 +6,7 @@
 #include <queue>
 #include <cmath>
 #include <limits>
+#include <iomanip> // Incluimos <iomanip> para el formato de salida
 
 using namespace std;
 
@@ -160,18 +161,6 @@ vector<int> nearestNeighborTSP(const vector<vector<double> >& distance) {
     return route;
 }
 
-// Función para calcular las celdas de Voronoi (simplificado)
-vector<vector<Point> > computeVoronoiCells(const vector<Point>& points) {
-    vector<vector<Point> > cells(points.size());
-    for (size_t i = 0; i < points.size(); ++i) {
-        cells[i].push_back(Point(points[i].x - 50, points[i].y - 50));
-        cells[i].push_back(Point(points[i].x - 50, points[i].y + 50));
-        cells[i].push_back(Point(points[i].x + 50, points[i].y + 50));
-        cells[i].push_back(Point(points[i].x + 50, points[i].y - 50));
-    }
-    return cells;
-}
-
 int main() {
     ifstream inputFile("input.txt");
     if (!inputFile.is_open()) {
@@ -239,15 +228,30 @@ int main() {
 
     cout << "3. Flujo máximo: " << mf.maxFlow(0, N - 1) << "\n";
 
-    // Parte 4: Voronoi (simplificado)
-    auto voronoiCells = computeVoronoiCells(centrals);
-    cout << "4. Polígonos de Voronoi:\n";
-    for (size_t i = 0; i < voronoiCells.size(); ++i) {
-        cout << "Polígono " << i + 1 << ":\n";
-        for (const Point& p : voronoiCells[i]) {
-            cout << "(" << p.x << "," << p.y << ") ";
+    // Parte 4: Lista de polígonos (distancias entre ubicaciones)
+    double x_sum = 0, y_sum = 0;
+    int num_points = centrals.size();
+    for (const auto& p : centrals) {
+        x_sum += p.x;
+        y_sum += p.y;
+    }
+    double x_avg = x_sum / num_points;
+    double y_avg = y_sum / num_points;
+
+    cout << fixed << setprecision(1);
+    cout << "Lista de Polígonos:\n";
+    cout << "- Centro de Ubicaciones: (" << x_avg << "," << y_avg << ")\n";
+    for (size_t i = 0; i < centrals.size(); ++i) {
+        cout << "- Ubicación " << i + 1 << ": (" << int(centrals[i].x) << "," << int(centrals[i].y) << ")\n";
+        for (size_t j = 0; j < centrals.size(); ++j) {
+            if (i == j) continue;
+            double dx = centrals[i].x - centrals[j].x;
+            double dy = centrals[i].y - centrals[j].y;
+            double dist = sqrt(dx * dx + dy * dy);
+            cout << "    Distancia entre (" << int(centrals[i].x) << "," << int(centrals[i].y) << ") y ("
+                 << int(centrals[j].x) << "," << int(centrals[j].y) << "): "
+                 << fixed << setprecision(3) << dist << "\n";
         }
-        cout << "\n";
     }
 
     return 0;
