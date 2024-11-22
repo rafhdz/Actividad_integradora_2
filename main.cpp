@@ -7,6 +7,8 @@
 #include <cmath>
 #include <limits>
 
+using namespace std;
+
 // Estructura para las aristas
 struct Edge {
     int u, v;
@@ -26,7 +28,7 @@ struct Point {
 
 // Disjoint Set Union (Union-Find) para Kruskal
 class DSU {
-    std::vector<int> parent, rank;
+    vector<int> parent, rank;
 public:
     DSU(int n) : parent(n), rank(n, 0) {
         for (int i = 0; i < n; ++i) parent[i] = i;
@@ -55,8 +57,8 @@ struct FlowEdge {
 
 class MaxFlow {
     int N;
-    std::vector<std::vector<FlowEdge> > adj;
-    std::vector<int> level, ptr;
+    vector<vector<FlowEdge> > adj;
+    vector<int> level, ptr;
 public:
     MaxFlow(int N) : N(N), adj(N), level(N), ptr(N) {}
 
@@ -66,9 +68,9 @@ public:
     }
 
     bool bfs(int s, int t) {
-        std::fill(level.begin(), level.end(), -1);
+        fill(level.begin(), level.end(), -1);
         level[s] = 0;
-        std::queue<int> q;
+        queue<int> q;
         q.push(s);
 
         while (!q.empty()) {
@@ -90,7 +92,7 @@ public:
         for (int& cid = ptr[u]; cid < adj[u].size(); ++cid) {
             FlowEdge& e = adj[u][cid];
             if (level[u] + 1 != level[e.v] || e.flow == e.capacity) continue;
-            int tr = dfs(e.v, t, std::min(pushed, e.capacity - e.flow));
+            int tr = dfs(e.v, t, min(pushed, e.capacity - e.flow));
             if (tr == 0) continue;
             e.flow += tr;
             adj[e.v][e.rev].flow -= tr;
@@ -102,8 +104,8 @@ public:
     int maxFlow(int s, int t) {
         int flow = 0;
         while (bfs(s, t)) {
-            std::fill(ptr.begin(), ptr.end(), 0);
-            while (int pushed = dfs(s, t, std::numeric_limits<int>::max())) {
+            fill(ptr.begin(), ptr.end(), 0);
+            while (int pushed = dfs(s, t, numeric_limits<int>::max())) {
                 flow += pushed;
             }
         }
@@ -112,7 +114,7 @@ public:
 };
 
 // Algoritmo 2-opt para mejorar la ruta del TSP
-void twoOpt(std::vector<int>& route, const std::vector<std::vector<double> >& distance) {
+void twoOpt(vector<int>& route, const vector<vector<double> >& distance) {
     int N = route.size() - 1; // route[0] == route[N]
     bool improved = true;
     while (improved) {
@@ -122,7 +124,7 @@ void twoOpt(std::vector<int>& route, const std::vector<std::vector<double> >& di
                 double delta = (distance[route[i - 1]][route[j]] + distance[route[i]][route[(j + 1) % N]]) -
                                (distance[route[i - 1]][route[i]] + distance[route[j]][route[(j + 1) % N]]);
                 if (delta < -1e-6) {
-                    std::reverse(route.begin() + i, route.begin() + j + 1);
+                    reverse(route.begin() + i, route.begin() + j + 1);
                     improved = true;
                 }
             }
@@ -131,17 +133,17 @@ void twoOpt(std::vector<int>& route, const std::vector<std::vector<double> >& di
 }
 
 // Algoritmo de Vecino Más Cercano para el TSP
-std::vector<int> nearestNeighborTSP(const std::vector<std::vector<double> >& distance) {
+vector<int> nearestNeighborTSP(const vector<vector<double> >& distance) {
     int N = distance.size();
-    std::vector<bool> visited(N, false);
-    std::vector<int> route;
+    vector<bool> visited(N, false);
+    vector<int> route;
     route.push_back(0); // Comenzar desde el nodo 0
     visited[0] = true;
 
     for (int i = 1; i < N; ++i) {
         int current = route.back();
         int next = -1;
-        double minDist = std::numeric_limits<double>::max();
+        double minDist = numeric_limits<double>::max();
 
         for (int j = 0; j < N; ++j) {
             if (!visited[j] && distance[current][j] < minDist) {
@@ -159,8 +161,8 @@ std::vector<int> nearestNeighborTSP(const std::vector<std::vector<double> >& dis
 }
 
 // Función para calcular las celdas de Voronoi (simplificado)
-std::vector<std::vector<Point> > computeVoronoiCells(const std::vector<Point>& points) {
-    std::vector<std::vector<Point> > cells(points.size());
+vector<vector<Point> > computeVoronoiCells(const vector<Point>& points) {
+    vector<vector<Point> > cells(points.size());
     for (size_t i = 0; i < points.size(); ++i) {
         cells[i].push_back(Point(points[i].x - 50, points[i].y - 50));
         cells[i].push_back(Point(points[i].x - 50, points[i].y + 50));
@@ -171,62 +173,62 @@ std::vector<std::vector<Point> > computeVoronoiCells(const std::vector<Point>& p
 }
 
 int main() {
-    std::ifstream inputFile("input.txt");
+    ifstream inputFile("input.txt");
     if (!inputFile.is_open()) {
-        std::cerr << "No se pudo abrir el archivo de entrada.\n";
+        cerr << "No se pudo abrir el archivo de entrada.\n";
         return 1;
     }
 
     int N;
     inputFile >> N;
 
-    std::vector<std::vector<double> > distance(N, std::vector<double>(N));
+    vector<vector<double> > distance(N, vector<double>(N));
     for (int i = 0; i < N; ++i)
         for (int j = 0; j < N; ++j)
             inputFile >> distance[i][j];
 
-    std::vector<std::vector<int> > capacity(N, std::vector<int>(N));
+    vector<vector<int> > capacity(N, vector<int>(N));
     for (int i = 0; i < N; ++i)
         for (int j = 0; j < N; ++j)
             inputFile >> capacity[i][j];
 
-    std::vector<Point> centrals(N);
+    vector<Point> centrals(N);
     for (int i = 0; i < N; ++i)
         inputFile >> centrals[i].x >> centrals[i].y;
 
     inputFile.close();
 
     // Parte 1: Árbol de Expansión Mínima
-    std::vector<Edge> edges;
+    vector<Edge> edges;
     for (int i = 0; i < N; ++i)
         for (int j = i + 1; j < N; ++j)
             edges.emplace_back(i, j, distance[i][j]);
 
-    std::sort(edges.begin(), edges.end());
+    sort(edges.begin(), edges.end());
     DSU dsu(N);
-    std::vector<std::pair<int, int> > mstEdges;
+    vector<pair<int, int> > mstEdges;
     for (const Edge& e : edges) {
         if (dsu.unite(e.u, e.v)) {
             mstEdges.emplace_back(e.u, e.v);
         }
     }
 
-    std::cout << "1. Forma de cablear las colonias con fibra:\n";
+    cout << "1. Forma de cablear las colonias con fibra:\n";
     for (const auto& e : mstEdges) {
         char colony1 = 'A' + e.first;
         char colony2 = 'A' + e.second;
-        std::cout << "(" << colony1 << "," << colony2 << ")\n";
+        cout << "(" << colony1 << "," << colony2 << ")\n";
     }
 
     // Parte 2: Ruta del Viajante con mejora 2-opt
-    std::vector<int> route = nearestNeighborTSP(distance);
+    vector<int> route = nearestNeighborTSP(distance);
     twoOpt(route, distance);
-    std::cout << "2. Ruta de correspondencia:\n";
+    cout << "2. Ruta de correspondencia:\n";
     for (size_t i = 0; i < route.size(); ++i) {
-        if (i > 0) std::cout << "-";
-        std::cout << char('A' + route[i]);
+        if (i > 0) cout << "-";
+        cout << char('A' + route[i]);
     }
-    std::cout << "\n";
+    cout << "\n";
 
     // Parte 3: Flujo Máximo
     MaxFlow mf(N);
@@ -235,17 +237,17 @@ int main() {
             if (capacity[u][v] > 0)
                 mf.addEdge(u, v, capacity[u][v]);
 
-    std::cout << "3. Flujo máximo: " << mf.maxFlow(0, N - 1) << "\n";
+    cout << "3. Flujo máximo: " << mf.maxFlow(0, N - 1) << "\n";
 
     // Parte 4: Voronoi (simplificado)
     auto voronoiCells = computeVoronoiCells(centrals);
-    std::cout << "4. Polígonos de Voronoi:\n";
+    cout << "4. Polígonos de Voronoi:\n";
     for (size_t i = 0; i < voronoiCells.size(); ++i) {
-        std::cout << "Polígono " << i + 1 << ":\n";
+        cout << "Polígono " << i + 1 << ":\n";
         for (const Point& p : voronoiCells[i]) {
-            std::cout << "(" << p.x << "," << p.y << ") ";
+            cout << "(" << p.x << "," << p.y << ") ";
         }
-        std::cout << "\n";
+        cout << "\n";
     }
 
     return 0;
